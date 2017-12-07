@@ -23,9 +23,12 @@ class RequestOTPScreen extends Component {
         this.setState({ phone: savedPhone, token: savedToken });
         console.log('get item', this.state.token)
         firebase.auth().signInWithCustomToken(this.state.token)
-        if (this.state.token) {
-            this.props.navigation.navigate('todo', { phone: this.state.phone })
-        }
+        .then(() => {
+            if (this.state.token) {
+                this.props.navigation.navigate('todo', { phone: this.state.phone })
+            }
+        })
+        
         } catch (err) {
             console.log(err)
         }
