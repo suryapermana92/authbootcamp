@@ -6,14 +6,23 @@ import { Text, View, ScrollView, Alert, AsyncStorage } from 'react-native';
 import { Button, FormLabel, FormInput } from 'react-native-elements'
 import { CardSection, Card, Input } from '../common'
 
+
 class TodoScreen extends Component {
-    static navigationOptions = () => {
+    static navigationOptions = ({ navigation }) => {
         return ({
             title: 'Surya\'s Todo App',
             headerRight: <Button 
                             title='Logout'
-                            onPress={() => this.logOut()}
-                            />
+                            onPress={() => {
+                                firebase.auth().signOut()
+                                .then(async() => {
+                                   await AsyncStorage.removeItem('token')
+                                   await AsyncStorage.removeItem('phone')
+                                    navigation.navigate('request')
+                                    
+                                });  
+                            }}
+                        />
         });
     }
 
@@ -28,6 +37,7 @@ class TodoScreen extends Component {
 
         this.getList = this.getList.bind(this);
         this.renderList = this.renderList.bind(this);
+        
     }
     
     getList() {
@@ -52,12 +62,7 @@ class TodoScreen extends Component {
         this.getList();
     }
     logout() {
-      firebase.auth().signOut()
-      .then(() => {
-          this.props.navigation.navigate('request')
-          AsyncStorage.removeItem('token')
-          AsyncStorage.removeItem('phone')
-        });  
+      
     }
     listSave() {
         if (this.state.listInput === '') {

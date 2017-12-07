@@ -49,6 +49,11 @@ class RequestOTPScreen extends Component {
                 title='Request OTP'
                 icon={{ name: 'perm-device-information' }} 
                 onPress={() => {
+                    if(this.state.phone.substr(0,2) !== "08") {
+                        return (
+                            alert('Nomor telepon harus berawalan 08..')
+                        )
+                    }
                     console.log('requesting OTP');
                     this.setState({ loading: true, message: '' });
                     axios({
