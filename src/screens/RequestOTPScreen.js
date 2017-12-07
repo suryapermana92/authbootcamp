@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios'
-import { Text, View } from 'react-native';
+import firebase from 'firebase'
+import { Text, View, AsyncStorage } from 'react-native';
 import { Button } from 'react-native-elements'
-import { CardSection, Card, Input } from '../common'
+import { CardSection, Card, Input, Spinner } from '../common'
 
 class RequestOTPScreen extends Component {
     static navigationOptions = () => {
@@ -12,13 +13,63 @@ class RequestOTPScreen extends Component {
     }
     state = {
         phone: '',
-        message: ''
+        message: '',
+        loading: false
+    }
+    componentWillMount = async () => {
+        try {
+        const savedToken = await AsyncStorage.getItem('token');
+        const savedPhone = await AsyncStorage.getItem('phone');
+        this.setState({ phone: savedPhone, token: savedToken });
+        console.log('get item', this.state.token)
+        firebase.auth().signInWithCustomToken(this.state.token)
+        if (this.state.token) {
+            this.props.navigation.navigate('todo', { phone: this.state.phone })
+        }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+    componentDidMount() {
+       
+    }
+    renderButton() {
+        if (this.state.loading) {
+            return (
+                <View style={{ height: 50, alignItems: 'center'}}>
+                <Spinner />
+                </View>
+            )
+        }
+        return (
+                <Button
+                title='Request OTP'
+                icon={{ name: 'perm-device-information' }} 
+                onPress={() => {
+                    console.log('requesting OTP');
+                    this.setState({ loading: true, message: '' });
+                    axios({
+                    method: 'POST',
+                    url: 'https://us-central1-todoapp-fbe30.cloudfunctions.net/requestOtp',
+                    data: { "phone": this.state.phone }
+                    })
+                    .then((response) => {
+                        console.log(response);
+                        this.setState({ loading: false })
+                        this.props.navigation.navigate('verify', { phone: this.state.phone })
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+                    }} 
+                />
+        )
     }
     render() {
         return (
             <Card>
             <CardSection>
-                <Input 
+                <Input
                 text='Phone Number'
                 placeholder='08xxxxxxxxxxx'
                 onChangeText={(text) => {
@@ -30,26 +81,8 @@ class RequestOTPScreen extends Component {
             </CardSection>
              <CardSection>
                 <View style={{ flex:1 }}>
-                <Button
-                title='Request OTP'
-                icon={{ name: 'perm-device-information' }} 
-                onPress={() => {
-                    console.log('requesting OTP');
-                    this.setState({ message: '' });
-                    axios({
-                    method: 'POST',
-                    url: 'https://us-central1-todoapp-fbe30.cloudfunctions.net/requestOtp',
-                    data: { "phone": this.state.phone }
-                    })
-                    .then((response) => {
-                        console.log(response);
-                        this.props.navigation.navigate('verify', { phone: this.state.phone })
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    });
-                    }} 
-                />
+                    {this.renderButton()}
+                
                 </View>
              </CardSection> 
         </Card>
